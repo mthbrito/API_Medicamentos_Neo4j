@@ -13,10 +13,7 @@ public class MedicamentoMapper {
         List<ComposicaoResponseDTO> composicao = medicamento.getComposicao()
                 .stream()
                 .map(contem -> new ComposicaoResponseDTO(
-                        new PrincipioAtivoResponseDTO(
-                                contem.getPrincipioAtivo().getId(),
-                                contem.getPrincipioAtivo().getNome()
-                        ),
+                        contem.getPrincipioAtivo().getNome(),
                         contem.getDosagem(),
                         contem.getUnidade()
                 ))
@@ -36,18 +33,16 @@ public class MedicamentoMapper {
         );
     }
 
-    public static MedicamentosMesmaComposicaoResponseDTO toMedicamentosMesmaComposicaoResponseDTO(List<Medicamento> medicamentos, List<PrincipioAtivo> principiosAtivos) {
-        List<MedicamentoResponseDTO> medicamentosMesmaComposicao = medicamentos
-                .stream()
-                .map(MedicamentoMapper::toMedicamentoResponseDTO)
-                .collect(Collectors.toList());
-        List<String> nomesPrincipiosAtivos = principiosAtivos
-                .stream()
-                .map(PrincipioAtivo::getNome)
-                .collect(Collectors.toList());
+    public static MedicamentosMesmaComposicaoResponseDTO toMedicamentosMesmaComposicaoResponseDTO(Medicamento medicamento, List<Medicamento> medicamentos) {
+        MedicamentoComComposicaoResponseDTO medicamentoComComposicaoResponseDTO = toMedicamentoComComposicaoResponseDTO(medicamento);
+        List<MedicamentoResponseDTO> medicamentosResponseDTO =
+                medicamentos
+                        .stream()
+                        .map(MedicamentoMapper::toMedicamentoResponseDTO)
+                        .toList();
         return new MedicamentosMesmaComposicaoResponseDTO(
-                medicamentosMesmaComposicao,
-                nomesPrincipiosAtivos
+                medicamentoComComposicaoResponseDTO,
+                medicamentosResponseDTO
         );
     }
 }

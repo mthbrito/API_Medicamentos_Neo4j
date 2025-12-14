@@ -2,6 +2,7 @@ package ifpb.api_medicamentos_neo4j.controller;
 
 import ifpb.api_medicamentos_neo4j.DTO.*;
 import ifpb.api_medicamentos_neo4j.service.MedicamentoService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ public class MedicamentoController {
 
     private final MedicamentoService medicamentoService;
 
+    @Autowired
     public MedicamentoController(MedicamentoService medicamentoService) {
         this.medicamentoService = medicamentoService;
     }
@@ -34,7 +36,7 @@ public class MedicamentoController {
     }
 
     @GetMapping("/medicamento/{nome}")
-    public ResponseEntity<MedicamentoResponseDTO> buscarMedicamentoPorNome(@PathVariable String nome) {
+    public ResponseEntity<MedicamentoComComposicaoResponseDTO> buscarMedicamentoPorNome(@PathVariable String nome) {
         return ResponseEntity.ok(medicamentoService.buscarMedicamentoPorNome(nome));
     }
 
@@ -48,14 +50,14 @@ public class MedicamentoController {
         return ResponseEntity.ok(medicamentoService.buscarMedicamentosComMesmaComposicao(medicamento));
     }
 
-    @PutMapping
-    public ResponseEntity<MedicamentoResponseDTO> atualizar(@RequestBody MedicamentoUpdateDTO dto) {
-        return ResponseEntity.ok(service.atualizar(dto));
+    @PutMapping("/{id}")
+    public ResponseEntity<MedicamentoComComposicaoResponseDTO> atualizarMedicamento(@PathVariable String id, @RequestBody MedicamentoUpdateDTO dto) {
+        return ResponseEntity.ok(medicamentoService.atualizarMedicamento(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable String id) {
-        service.deletar(id);
+    public ResponseEntity<Void> deletarMedicamento(@PathVariable String id) {
+        medicamentoService.deletarMedicamento(id);
         return ResponseEntity.noContent().build();
     }
 }

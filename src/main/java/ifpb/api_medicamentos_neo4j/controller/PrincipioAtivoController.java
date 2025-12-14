@@ -2,6 +2,7 @@ package ifpb.api_medicamentos_neo4j.controller;
 
 import ifpb.api_medicamentos_neo4j.entity.PrincipioAtivo;
 import ifpb.api_medicamentos_neo4j.service.PrincipioAtivoService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +14,7 @@ public class PrincipioAtivoController {
 
     private final PrincipioAtivoService principioAtivoService;
 
+    @Autowired
     public PrincipioAtivoController(PrincipioAtivoService principioAtivoService) {
         this.principioAtivoService = principioAtivoService;
     }

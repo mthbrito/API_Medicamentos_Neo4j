@@ -1,9 +1,6 @@
 package ifpb.api_medicamentos_neo4j.service;
 
-import ifpb.api_medicamentos_neo4j.DTO.MedicamentoCreateDTO;
-import ifpb.api_medicamentos_neo4j.DTO.MedicamentoComComposicaoResponseDTO;
-import ifpb.api_medicamentos_neo4j.DTO.MedicamentosMesmaComposicaoResponseDTO;
-import ifpb.api_medicamentos_neo4j.DTO.MedicamentoResponseDTO;
+import ifpb.api_medicamentos_neo4j.DTO.*;
 import ifpb.api_medicamentos_neo4j.entity.Contem;
 import ifpb.api_medicamentos_neo4j.entity.Medicamento;
 import ifpb.api_medicamentos_neo4j.entity.PrincipioAtivo;
@@ -12,6 +9,7 @@ import ifpb.api_medicamentos_neo4j.exception.PrincipioAtivoNaoEncontradoExceptio
 import ifpb.api_medicamentos_neo4j.repository.MedicamentoRepository;
 import ifpb.api_medicamentos_neo4j.repository.PrincipioAtivoRepository;
 import jakarta.transaction.Transactional;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -75,9 +73,9 @@ public class MedicamentoService {
         throw new MedicamentoNaoEncontradoException();
     }
 
-    public MedicamentoResponseDTO buscarMedicamentoPorNome(String nome) {
+    public MedicamentoComComposicaoResponseDTO buscarMedicamentoPorNome(String nome) {
         if(medicamentoRepository.existsMedicamentoByNome(nome)) {
-            return toMedicamentoResponseDTO(medicamentoRepository.findMedicamentoByNome(nome));
+            return toMedicamentoComComposicaoResponseDTO(medicamentoRepository.findMedicamentoByNome(nome));
         }
         throw new MedicamentoNaoEncontradoException();
     }
@@ -93,29 +91,50 @@ public class MedicamentoService {
     }
 
     public MedicamentosMesmaComposicaoResponseDTO buscarMedicamentosComMesmaComposicao(String nome) {
-        if(nome != null && medicamentoRepository.existsMedicamentoByNome(nome)) {
-            List<Medicamento> medicamentos = medicamentoRepository.findMedicamentosWithMesmaComposicao(nome);
-            List<PrincipioAtivo> principioAtivos = principioAtivoRepository.findPrincipiosAtivosByMedicamento(nome);
-            return toMedicamentosMesmaComposicaoResponseDTO(medicamentos, principioAtivos);
+        if (nome == null || !medicamentoRepository.existsMedicamentoByNome(nome)) {
+            throw new MedicamentoNaoEncontradoException();
         }
-        throw new MedicamentoNaoEncontradoException();
+        Medicamento medicamento = medicamentoRepository.findMedicamentoByNome(nome);
+        List<Medicamento> medicamentos = medicamentoRepository.findMedicamentosWithMesmaComposicao(nome);
+            return toMedicamentosMesmaComposicaoResponseDTO(medicamento, medicamentos);
     }
 
-    // PUT (ID NO BODY)
-    public MedicamentoResponseDTO atualizar(MedicamentoUpdateDTO dto) {
-        Medicamento medicamento = repository.findById(dto.getId())
-                .orElseThrow(() -> new RuntimeException("Medicamento não encontrado"));
+    @Transactional
+    public MedicamentoComComposicaoResponseDTO atualizarMedicamento(String id, MedicamentoUpdateDTO dto) {
+        if(!medicamentoRepository.existsMedicamentoById(id)) {
+            throw new MedicamentoNaoEncontradoException();
+        }
+        Medicamento medicamento = medicamentoRepository.findMedicamentoById(id);
+        if (dto.nome() != null) {
+            medicamento.setNome(dto.nome());
+        }
+        if (dto.fabricante() != null) {
+            medicamento.setFabricante(dto.fabricante());
+        }
+        if (dto.composicao() != null) {
+            medicamento.getComposicao().clear();
+            for (ComposicaoUpdateDTO item : dto.composicao()) {
 
-        medicamento.setNome(dto.getNome());
-        medicamento.setDescricao(dto.getDescricao());
-        medicamento.setPreco(dto.getPreco());
-        medicamento.setFabricante(dto.getFabricante());
+                PrincipioAtivo principio =
+                        principioAtivoRepository
+                                .findPrincipioAtivoByNome(item.principioAtivo());
 
-        return new MedicamentoResponseDTO(repository.save(medicamento));
+                Contem contem = new Contem();
+                contem.setPrincipioAtivo(principio);
+                contem.setDosagem(item.dosagem());
+                contem.setUnidade(item.unidade());
+
+                medicamento.getComposicao().add(contem);
+            }
+        }
+        return toMedicamentoComComposicaoResponseDTO(medicamentoRepository.save(medicamento));
     }
 
-    // DELETE
-    public void deletar(String id) {
-        repository.deleteById(id);
+    public void deletarMedicamento(String id) {
+        if(!medicamentoRepository.existsMedicamentoById(id)) {
+            throw new MedicamentoNaoEncontradoException();
+        }
+        medicamentoRepository.deleteById(id);
     }
+
 }
