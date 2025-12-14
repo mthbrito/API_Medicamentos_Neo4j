@@ -5,6 +5,6 @@ import java.util.List;
 public record MedicamentoCreateDTO(
         String nome,
         String fabricante,
-        List<String> principiosAtivos
+        List<ComposicaoCreateDTO> composicao
 ) {
 }

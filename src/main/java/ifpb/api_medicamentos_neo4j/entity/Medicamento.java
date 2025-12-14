@@ -1,6 +1,5 @@
 package ifpb.api_medicamentos_neo4j.entity;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.neo4j.core.schema.*;
@@ -16,11 +15,12 @@ public class Medicamento {
     @Id
     @GeneratedValue(UUIDStringGenerator.class)
     private String id;
+
     @Property("nome_comercial")
     private String nome;
     @Property("fabricante")
     private String fabricante;
 
-    @Relationship(type = "CONTEM", direction = Relationship.Direction.OUTGOING)
-    private Set<PrincipioAtivo> principiosAtivos;
+    @Relationship(type = "CONTEM")
+    private Set<Contem> composicao;
 }

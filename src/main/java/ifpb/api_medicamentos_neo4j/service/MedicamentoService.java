@@ -1,6 +1,7 @@
 package ifpb.api_medicamentos_neo4j.service;
 
 import ifpb.api_medicamentos_neo4j.DTO.MedicamentoCreateDTO;
+import ifpb.api_medicamentos_neo4j.entity.Contem;
 import ifpb.api_medicamentos_neo4j.entity.Medicamento;
 import ifpb.api_medicamentos_neo4j.entity.PrincipioAtivo;
 import ifpb.api_medicamentos_neo4j.exception.MedicamentoNaoEncontradoException;
@@ -31,19 +32,23 @@ public class MedicamentoService {
         medicamento.setNome(dto.nome());
         medicamento.setFabricante(dto.fabricante());
 
-        Set<PrincipioAtivo> principios = dto.principiosAtivos()
+        Set<Contem> composicao = dto.composicao()
                 .stream()
-                .map(nome -> {
+                .map(item -> {
+                    PrincipioAtivo principioAtivo = new PrincipioAtivo();
                     try {
-                        return principioAtivoRepository.findPrincipioAtivoByNome(nome);
+                        principioAtivo = principioAtivoRepository.findPrincipioAtivoByNome(item.principioAtivo());
                     } catch (PrincipioAtivoNaoEncontradoException e) {
-                        PrincipioAtivo principioAtivo = new PrincipioAtivo();
-                        principioAtivo.setNome(nome);
-                        return principioAtivo;
+                        principioAtivo.setNome(item.principioAtivo());
                     }
+                    Contem contem = new Contem();
+                    contem.setPrincipioAtivo(principioAtivo);
+                    contem.setDosagem(item.dosagem());
+                    contem.setUnidade(item.unidade());
+                    return contem;
                 })
                 .collect(Collectors.toSet());
-        medicamento.setPrincipiosAtivos(principios);
+        medicamento.setComposicao(composicao);
         return medicamentoRepository.save(medicamento);
     }
 
