@@ -1,6 +1,9 @@
 package ifpb.api_medicamentos_neo4j.service;
 
 import ifpb.api_medicamentos_neo4j.DTO.MedicamentoCreateDTO;
+import ifpb.api_medicamentos_neo4j.DTO.MedicamentoComComposicaoResponseDTO;
+import ifpb.api_medicamentos_neo4j.DTO.MedicamentosMesmaComposicaoResponseDTO;
+import ifpb.api_medicamentos_neo4j.DTO.MedicamentoResponseDTO;
 import ifpb.api_medicamentos_neo4j.entity.Contem;
 import ifpb.api_medicamentos_neo4j.entity.Medicamento;
 import ifpb.api_medicamentos_neo4j.entity.PrincipioAtivo;
@@ -11,9 +14,12 @@ import ifpb.api_medicamentos_neo4j.repository.PrincipioAtivoRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static ifpb.api_medicamentos_neo4j.mapper.MedicamentoMapper.*;
 
 @Service
 public class MedicamentoService {
@@ -27,7 +33,7 @@ public class MedicamentoService {
     }
 
     @Transactional
-    public Medicamento salvarMedicamento(MedicamentoCreateDTO dto) {
+    public MedicamentoComComposicaoResponseDTO salvarMedicamento(MedicamentoCreateDTO dto) {
         Medicamento medicamento = new Medicamento();
         medicamento.setNome(dto.nome());
         medicamento.setFabricante(dto.fabricante());
@@ -49,37 +55,48 @@ public class MedicamentoService {
                 })
                 .collect(Collectors.toSet());
         medicamento.setComposicao(composicao);
-        return medicamentoRepository.save(medicamento);
+        medicamentoRepository.save(medicamento);
+        return toMedicamentoComComposicaoResponseDTO(medicamento);
     }
 
-    public List<Medicamento> buscarMedicamentos() {
-        return medicamentoRepository.findAll();
+    public List<MedicamentoResponseDTO> buscarMedicamentos() {
+        List<Medicamento> medicamentos = medicamentoRepository.findAll();
+        List<MedicamentoResponseDTO> medicamentosResponseDTO = new ArrayList<>();
+        medicamentos.forEach(medicamento -> {
+            medicamentosResponseDTO.add(toMedicamentoResponseDTO(medicamento));
+        });
+        return medicamentosResponseDTO;
     }
 
-    public Medicamento buscarMedicamentoPorId(String id) {
+    public MedicamentoResponseDTO buscarMedicamentoPorId(String id) {
         if(medicamentoRepository.existsMedicamentoById(id)){
-            return medicamentoRepository.findMedicamentoById(id);
+            return toMedicamentoResponseDTO(medicamentoRepository.findMedicamentoById(id));
         }
         throw new MedicamentoNaoEncontradoException();
     }
 
-    public Medicamento buscarMedicamentoPorNome(String nome) {
+    public MedicamentoResponseDTO buscarMedicamentoPorNome(String nome) {
         if(medicamentoRepository.existsMedicamentoByNome(nome)) {
-            return medicamentoRepository.findMedicamentoByNome(nome);
+            return toMedicamentoResponseDTO(medicamentoRepository.findMedicamentoByNome(nome));
         }
         throw new MedicamentoNaoEncontradoException();
     }
 
-    public List<Medicamento> buscarMedicamentosPorPrincipioAtivo(String principioAtivo) {
+    public List<MedicamentoResponseDTO> buscarMedicamentosPorPrincipioAtivo(String principioAtivo) {
         if(principioAtivo == null || principioAtivoRepository.findPrincipioAtivoByNome(principioAtivo) == null) {
             throw new PrincipioAtivoNaoEncontradoException();
         }
-        return medicamentoRepository.findMedicamentosByPrincipioAtivo(principioAtivo);
+        List<Medicamento> medicamentos = medicamentoRepository.findMedicamentosByPrincipioAtivo(principioAtivo);
+        List<MedicamentoResponseDTO> medicamentosResponseDTO = new ArrayList<>();
+        medicamentos.forEach(medicamento -> medicamentosResponseDTO.add(toMedicamentoResponseDTO(medicamento)));
+        return medicamentosResponseDTO;
     }
 
-    public List<Medicamento> buscarMedicamentosComMesmaComposicao(String medicamento) {
-        if(medicamento != null && medicamentoRepository.existsMedicamentoByNome(medicamento)) {
-            return medicamentoRepository.findMedicamentosWithMesmaComposicao(medicamento);
+    public MedicamentosMesmaComposicaoResponseDTO buscarMedicamentosComMesmaComposicao(String nome) {
+        if(nome != null && medicamentoRepository.existsMedicamentoByNome(nome)) {
+            List<Medicamento> medicamentos = medicamentoRepository.findMedicamentosWithMesmaComposicao(nome);
+            List<PrincipioAtivo> principioAtivos = principioAtivoRepository.findPrincipiosAtivosByMedicamento(nome);
+            return toMedicamentosMesmaComposicaoResponseDTO(medicamentos, principioAtivos);
         }
         throw new MedicamentoNaoEncontradoException();
     }
