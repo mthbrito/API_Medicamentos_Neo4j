@@ -100,4 +100,22 @@ public class MedicamentoService {
         }
         throw new MedicamentoNaoEncontradoException();
     }
+
+    // PUT (ID NO BODY)
+    public MedicamentoResponseDTO atualizar(MedicamentoUpdateDTO dto) {
+        Medicamento medicamento = repository.findById(dto.getId())
+                .orElseThrow(() -> new RuntimeException("Medicamento não encontrado"));
+
+        medicamento.setNome(dto.getNome());
+        medicamento.setDescricao(dto.getDescricao());
+        medicamento.setPreco(dto.getPreco());
+        medicamento.setFabricante(dto.getFabricante());
+
+        return new MedicamentoResponseDTO(repository.save(medicamento));
+    }
+
+    // DELETE
+    public void deletar(String id) {
+        repository.deleteById(id);
+    }
 }
