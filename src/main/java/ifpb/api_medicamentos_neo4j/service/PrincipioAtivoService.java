@@ -33,4 +33,25 @@ public class PrincipioAtivoService {
         }
         throw new PrincipioAtivoNaoEncontradoException();
     }
+
+    public PrincipioAtivo atualizar(PrincipioAtivoUpdateDTO dto) {
+
+        PrincipioAtivo principioAtivo = repository.findById(dto.getId())
+                .orElseThrow(() ->
+                        new PrincipioAtivoNaoEncontradoException("Princípio ativo não encontrado"));
+
+        principioAtivo.setNome(dto.getNome());
+        principioAtivo.setDescricao(dto.getDescricao());
+
+        return repository.save(principioAtivo);
+    }
+
+    public void deletar(String id) {
+
+        if (!repository.existsById(id)) {
+            throw new PrincipioAtivoNaoEncontradoException("Princípio ativo não encontrado");
+        }
+
+        repository.deleteById(id);
+    }
 }

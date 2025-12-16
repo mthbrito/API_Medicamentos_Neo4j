@@ -5,6 +5,7 @@ import ifpb.api_medicamentos_neo4j.service.PrincipioAtivoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ifpb.api_medicamentos_neo4j.DTO.PrincipiosAtivosUpdateDTO;
 
 import java.util.List;
 
@@ -34,4 +35,16 @@ public class PrincipioAtivoController {
         return ResponseEntity.ok(principioAtivoService.buscarPrincipioAtivoPorNome(nome));
     }
 
+    @PutMapping
+    public ResponseEntity<PrincipioAtivo> atualizar(
+            @RequestBody PrincipioAtivoUpdateDTO dto) {
+
+        return ResponseEntity.ok(service.atualizar(dto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletar(@PathVariable String id) {
+        service.deletar(id);
+        return ResponseEntity.noContent().build();
+    }
 }
