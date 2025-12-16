@@ -1,5 +1,6 @@
 package ifpb.api_medicamentos_neo4j.service;
 
+import ifpb.api_medicamentos_neo4j.DTO.PrincipioAtivoUpdateDTO;
 import ifpb.api_medicamentos_neo4j.entity.PrincipioAtivo;
 import ifpb.api_medicamentos_neo4j.exception.PrincipioAtivoNaoEncontradoException;
 import ifpb.api_medicamentos_neo4j.repository.PrincipioAtivoRepository;
@@ -34,24 +35,26 @@ public class PrincipioAtivoService {
         throw new PrincipioAtivoNaoEncontradoException();
     }
 
-    public PrincipioAtivo atualizar(PrincipioAtivoUpdateDTO dto) {
+    public PrincipioAtivo atualizarPrincipioAtivo(String id, PrincipioAtivoUpdateDTO dto) {
 
-        PrincipioAtivo principioAtivo = repository.findById(dto.getId())
-                .orElseThrow(() ->
-                        new PrincipioAtivoNaoEncontradoException("Princípio ativo não encontrado"));
+        if(!principioAtivoRepository.existsPrincipioAtivoById(id)) {
+            throw new PrincipioAtivoNaoEncontradoException();
+        }
+        PrincipioAtivo principioAtivo = principioAtivoRepository.findPrincipioAtivoById(id);
 
-        principioAtivo.setNome(dto.getNome());
-        principioAtivo.setDescricao(dto.getDescricao());
-
-        return repository.save(principioAtivo);
+        if(dto.nome() != null) {
+            principioAtivo.setNome(dto.nome());
+        }
+        if(dto.sistemaAtuacao() != null) {
+            principioAtivo.setSistemaAtuacao(dto.sistemaAtuacao());
+        }
+        return principioAtivoRepository.save(principioAtivo);
     }
 
-    public void deletar(String id) {
-
-        if (!repository.existsById(id)) {
+    public void deletarPrincipioAtivo(String id) {
+        if (!principioAtivoRepository.existsById(id)) {
             throw new PrincipioAtivoNaoEncontradoException("Princípio ativo não encontrado");
         }
-
-        repository.deleteById(id);
+        principioAtivoRepository.deleteById(id);
     }
 }
